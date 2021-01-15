@@ -15,16 +15,16 @@ class _OrientationStream {
   final Stream<NativeDeviceOrientation> stream;
   final bool useSensor;
 
-  _OrientationStream({@required this.stream, @required this.useSensor});
+  _OrientationStream({required this.stream, required this.useSensor});
 }
 
 class NativeDeviceOrientationCommunicator {
-  static NativeDeviceOrientationCommunicator _instance;
+  static NativeDeviceOrientationCommunicator? _instance;
 
   final MethodChannel _methodChannel;
   final EventChannel _eventChannel;
 
-  _OrientationStream _stream;
+  _OrientationStream? _stream;
 
   factory NativeDeviceOrientationCommunicator() {
     if (_instance == null) {
@@ -36,7 +36,7 @@ class NativeDeviceOrientationCommunicator {
           methodChannel, eventChannel);
     }
 
-    return _instance;
+    return _instance!;
   }
 
   @visibleForTesting
@@ -62,9 +62,9 @@ class NativeDeviceOrientationCommunicator {
     await _methodChannel.invokeMethod('resume');
   }
 
-  Stream<NativeDeviceOrientation> onOrientationChanged(
+  Stream<NativeDeviceOrientation>? onOrientationChanged(
       {bool useSensor = false}) {
-    if (_stream == null || _stream.useSensor != useSensor) {
+    if (_stream?.useSensor != useSensor) {
       final params = <String, dynamic>{
         'useSensor': useSensor,
       };
@@ -75,7 +75,7 @@ class NativeDeviceOrientationCommunicator {
           }),
           useSensor: useSensor);
     }
-    return _stream.stream;
+    return _stream?.stream;
   }
 
   NativeDeviceOrientation _fromString(String orientationString) {
@@ -97,15 +97,15 @@ class NativeDeviceOrientationCommunicator {
 
 class NativeDeviceOrientationReader extends StatefulWidget {
   const NativeDeviceOrientationReader({
-    Key key,
+    Key? key,
     this.useSensor = false,
-    @required this.builder,
+    required this.builder,
   }) : super(key: key);
 
   final WidgetBuilder builder;
   final bool useSensor;
 
-  static NativeDeviceOrientation orientation(BuildContext context) {
+  static NativeDeviceOrientation? orientation(BuildContext context) {
     final inheritedNativeOrientation =
         context.dependOnInheritedWidgetOfExactType<
             _InheritedNativeDeviceOrientation>();
@@ -119,7 +119,7 @@ class NativeDeviceOrientationReader extends StatefulWidget {
       return true;
     }());
 
-    return inheritedNativeOrientation.nativeOrientation;
+    return inheritedNativeOrientation?.nativeOrientation;
   }
 
   @override
@@ -134,12 +134,12 @@ class NativeDeviceOrientationReaderState
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance?.addObserver(this);
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
   }
 
@@ -190,7 +190,7 @@ class NativeDeviceOrientationReaderState
                       );
                     } else {
                       return _InheritedNativeDeviceOrientation(
-                        nativeOrientation: asyncResult.data,
+                        nativeOrientation: asyncResult.data ?? NativeDeviceOrientation.unknown,
                         child: Builder(builder: widget.builder),
                       );
                     }
@@ -198,7 +198,7 @@ class NativeDeviceOrientationReaderState
             });
           } else {
             return _InheritedNativeDeviceOrientation(
-              nativeOrientation: asyncResult.data,
+              nativeOrientation: asyncResult.data ?? NativeDeviceOrientation.unknown,
               child: Builder(builder: widget.builder),
             );
           }
@@ -212,11 +212,10 @@ class _InheritedNativeDeviceOrientation extends InheritedWidget {
   final NativeDeviceOrientation nativeOrientation;
 
   const _InheritedNativeDeviceOrientation({
-    Key key,
-    @required this.nativeOrientation,
-    @required Widget child,
-  })  : assert(nativeOrientation != null),
-        super(key: key, child: child);
+    Key? key,
+    required this.nativeOrientation,
+    required Widget child,
+  })  : super(key: key, child: child);
 
   @override
   bool updateShouldNotify(_InheritedNativeDeviceOrientation oldWidget) =>
